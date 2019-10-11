@@ -2,6 +2,12 @@
 
 A library to assist with pushing notifications to RQueue.
 
+Provides the following functionality:
+
+- Builds notifications with support for Handlebar templating
+- Resolves SRV records for sending to priortized notification queues (@TODO)
+- Calculates sha256 hash, optionally salted with a shared secret (@TODO)
+
 ## Notifications
 
 RQPush requires that all notifications define the following fields:
@@ -9,13 +15,13 @@ RQPush requires that all notifications define the following fields:
 ```json
 {
     "app": "AppName",
-    "alert_type": "type of alert",
+    "category": "type of notification",
     "lang": "Langauge code",
     "title": "Subject",
     "short_text": "Short body",
-    "short_html": "<p>Short body</p>",
+    "short_html": "<P>Short body</P>",
     "long_text": "Body",
-    "long_html": "<html><p>Body</p></html>",
+    "long_html": "<P>Full body</P>",
 }
 ```
 
@@ -24,11 +30,11 @@ For example:
 ```json
 {
     "app": "Netgrasp",
-    "alert_type": "first_seen_device",
+    "category": "first_seen_device",
     "lang": "en",
     "title": "[netgrasp] new device: iPhone",
     "short_text": "A new device joined your network: iPhone",
-    "short_html": "<p>A new device joined your network: <em>iPhone</em></p>",
+    "short_html": "<P>A new device joined your network: <EM>iPhone</EM></P>",
     "long_text": "A new device joined your network:
      * iPhone
      * ip: 10.202.14.37 [ff:ff:ff:ff:ff:ff]
