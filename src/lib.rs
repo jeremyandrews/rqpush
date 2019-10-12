@@ -1,7 +1,9 @@
 #[macro_use] extern crate serde_json;
+#[macro_use] extern crate serde_derive;
 
 use serde_json::Value;
 use handlebars::Handlebars;
+use sha2::{Sha256, Digest};
 
 mod template;
 
@@ -138,7 +140,7 @@ impl Notification {
     }
 
     pub fn send(&mut self, ttl: u32, priority: u8) -> bool {
-        // Be sure {{app}}, {{url}}, {{tagline}} and {{category}} are defined
+        // Provide field mappings, ie {{app}} and {{category}}
         if !&self.values["app"].is_null() {
             self.values["app"] = json!(&self.app);
         }
@@ -153,6 +155,8 @@ impl Notification {
         let mut outbound_notification = OutboundNotification::default();
         outbound_notification.app = self.app.clone();
         outbound_notification.lang = self.lang.clone();
+        outbound_notification.ttl = ttl;
+        outbound_notification.priority = priority;
 
         // Process title (which may include {{variables}})
         outbound_notification.title = process_template(
@@ -234,12 +238,22 @@ impl Notification {
             &mut self.values);
         
         eprintln!("outbound_notification: ({:?})", outbound_notification);
+        let contents = json!(outbound_notification).to_string();
+
+        let message = Message{
+            sha256: generate_sha256(&contents, None),
+            contents: contents,
+            priority: priority,
+            ttl: ttl,
+        };
+
+        eprintln!("message: ({:?})", message);
 
         true
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub struct OutboundNotification {
     app: String,
     url: String,
@@ -251,6 +265,30 @@ pub struct OutboundNotification {
     short_html: String,
     long_text: String,
     long_html: String,
+    ttl: u32,
+    priority: u8,
+}
+
+#[derive(Debug, Default, Serialize)]
+pub struct Message {
+    contents: String,
+    sha256: String,
+    priority: u8,
+    ttl: u32,
+}
+
+// Generate a sha256 of a string, including an optional shared_secret as salt
+pub fn generate_sha256(text: &str, shared_secret: Option<&str>) -> String {
+    let mut hasher = Sha256::new();
+    hasher.input(text.as_bytes());
+    let salt = match shared_secret {
+        Some(s) => s,
+        None => "",
+    };
+    if salt != "" {
+        hasher.input(salt.as_bytes());
+    }
+    format!("{:x}", hasher.result())
 }
 
 fn process_template(notification: String, template: String, values: &mut Value) -> String {
