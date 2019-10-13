@@ -1,5 +1,13 @@
+//! RQPush is a library that assists with generating and sending
+//! notifications to RQueue:
+//! https://github.com/jeremyandrews/rqueue
+
+#![deny(missing_docs)]
+
+/// Use json!() macro for creating JSON key-value pairs.
 #[macro_use]
 extern crate serde_json;
+/// Use #[derive(Serialize)] for converting struct to JSON key-value pairs.
 #[macro_use]
 extern crate serde_derive;
 
@@ -13,6 +21,7 @@ use sha2::{Digest, Sha256};
 mod template;
 
 #[derive(Debug)]
+/// An object used to generate notifications.
 pub struct Notification {
     app: String,
     url: Option<String>,
@@ -32,10 +41,10 @@ pub struct Notification {
 }
 
 impl Notification {
-    // Create a notification with the minumum required number of fields:
-    //  - `app` is the app name
-    //  - `title` is short text for the notification (ie, an email subject)
-    //  - `short_text` is longer text for the notification (ie, an email body)
+    /// Initializes a notification with the minimum number of required fields:
+    ///  - `app` is the app name
+    ///  - `title` is short text for the notification (ie, an email subject)
+    ///  - `short_text` is longer text for the notification (ie, an email body)
     pub fn init(app: &str, title: &str, short_text: &str) -> Notification {
         let default_values = match serde_json::from_str(template::DEFAULT_MAPPING) {
             Ok(v) => v,
@@ -63,87 +72,114 @@ impl Notification {
         }
     }
 
+    /// Update the notification object, setting the notification app name.
     pub fn set_app(&mut self, app: &str) -> &Notification {
         self.app = app.to_string();
         self.values["app"] = json!(&self.app);
         self
     }
 
+    /// Update the notification object, setting the notification url.
     pub fn set_url(&mut self, url: &str) -> &Notification {
         self.url = Some(url.to_string());
         self.values["url"] = json!(&self.url);
         self
     }
 
+    /// Update the notification object, setting the notification tagline.
     pub fn set_tagline(&mut self, tagline: &str) -> &Notification {
         self.tagline = Some(tagline.to_string());
         self.values["tagline"] = json!(&self.tagline);
         self
     }
 
+    /// Update the notification object, setting the notification category.
     pub fn set_category(&mut self, category: &str) -> &Notification {
         self.category = Some(category.to_string());
         self.values["category"] = json!(&self.category);
         self
     }
 
+    /// Update the notification object, setting the notification language.
     pub fn set_lang(&mut self, lang: &str) -> &Notification {
         self.lang = lang.to_string();
         self.values["lang"] = json!(&self.lang);
         self
     }
 
+    /// Update the notification object, setting the notification title.
     pub fn set_title(&mut self, title: &str) -> &Notification {
         self.title = title.to_string();
         self.values["title"] = json!(&self.title);
         self
     }
 
+    /// Update the notification object, setting the short_text.
     pub fn set_short_text(&mut self, short_text: &str) -> &Notification {
         self.short_text = short_text.to_string();
         self
     }
 
+    /// Update the notification object, setting the short_text_template (otherwise will
+    /// default to template::DEFAULT_TEXT_TEMPLATE).
     pub fn set_short_text_template(&mut self, template: String) -> &Notification {
         self.short_text_template = Some(template.to_string());
         self
     }
 
+    /// Update the notification object, setting the short_html. This is used when sending
+    /// email notifications -- if not set, will be the same as short_text.
     pub fn set_short_html(&mut self, short_html: &str) -> &Notification {
         self.short_html = Some(short_html.to_string());
         self
     }
 
+    /// Update the notification object, setting the long_text -- if not set, will be the
+    /// same as short_text.
     pub fn set_long_text(&mut self, long_text: &str) -> &Notification {
         self.long_text = Some(long_text.to_string());
         self
     }
 
+    /// Update the notification object, setting the long_text_template (otherwise will
+    /// default to template::DEFAULT_TEXT_TEMPLATE).
     pub fn set_long_text_template(&mut self, template: String) -> &Notification {
         self.long_text_template = Some(template.to_string());
         self
     }
 
+    /// Update the notification object, setting the short_html. This is used when sending
+    /// email notifications -- if not set, will be the same as short_html.
     pub fn set_long_html(&mut self, long_html: &str) -> &Notification {
         self.long_html = Some(long_html.to_string());
         self
     }
 
+    /// Update the notification object, setting the short_html_template (otherwise will
+    /// default to template::DEFAULT_HTML_TEMPLATE).
     pub fn set_short_html_template(&mut self, template: String) -> &Notification {
         self.short_html_template = Some(template.to_string());
         self
     }
 
+    /// Update the notification object, setting the long_html_template (otherwise will
+    /// default to template::DEFAULT_HTML_TEMPLATE).
     pub fn set_long_html_template(&mut self, template: String) -> &Notification {
         self.long_html_template = Some(template.to_string());
         self
     }
 
+    /// Update the notification object, adding a handlebars key->value pair,
+    /// for example: {{key}} -> "value" will cause anywhere {{key}} is written
+    /// to be replaced with "value".
     pub fn add_value(&mut self, key: String, value: String) -> &Notification {
         self.values[key] = json!(value);
         self
     }
 
+    /// Compiles and sends the notification. Any missing fields are automatically
+    /// filled out, a sha256 is calculated (salted with an optional shared secret),
+    /// then the notification is sent using Reqwest.
     pub fn send(
         &mut self,
         server: &str,
@@ -270,6 +306,8 @@ impl Notification {
 }
 
 #[derive(Debug, Default, Serialize)]
+/// The final outbound notification object that is derived from
+/// the internal Notification object.
 pub struct OutboundNotification {
     app: String,
     url: String,
@@ -286,6 +324,8 @@ pub struct OutboundNotification {
 }
 
 #[derive(Debug, Default, Serialize)]
+/// The final outbound message that is sent, where "contents" is the OutboundNotification
+/// derived from the internal Notification.
 pub struct Message {
     sha256: String,
     contents: String,
@@ -293,7 +333,7 @@ pub struct Message {
     ttl: u32,
 }
 
-// Generate a sha256 of a string, including an optional shared_secret as salt
+/// Generate a sha256 of a string, including an optional shared_secret as salt.
 pub fn generate_sha256(text: &str, shared_secret: Option<&str>) -> String {
     let mut hasher = Sha256::new();
     hasher.input(text.as_bytes());
@@ -307,6 +347,7 @@ pub fn generate_sha256(text: &str, shared_secret: Option<&str>) -> String {
     format!("{:x}", hasher.result())
 }
 
+/// Invokes handlebars to convert {{tokens}} to their values.
 fn process_template(notification: String, template: String, values: &mut Value) -> String {
     values["notification"] = json!(notification);
     let handlebars = Handlebars::new();
