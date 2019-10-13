@@ -1,9 +1,12 @@
 #[macro_use] extern crate serde_json;
 #[macro_use] extern crate serde_derive;
 
+use std::result::Result;
+
 use serde_json::Value;
 use handlebars::Handlebars;
 use sha2::{Sha256, Digest};
+use reqwest::{Response, Error};
 
 mod template;
 
@@ -139,7 +142,7 @@ impl Notification {
         self
     }
 
-    pub fn send(&mut self, ttl: u32, priority: u8) -> bool {
+    pub fn send(&mut self, server: &str, priority: u8, ttl: u32, shared_secret: Option<&str>) -> Result<Response, Error> {
         // Provide field mappings, ie {{app}} and {{category}}
         if !&self.values["app"].is_null() {
             self.values["app"] = json!(&self.app);
@@ -155,8 +158,8 @@ impl Notification {
         let mut outbound_notification = OutboundNotification::default();
         outbound_notification.app = self.app.clone();
         outbound_notification.lang = self.lang.clone();
-        outbound_notification.ttl = ttl;
         outbound_notification.priority = priority;
+        outbound_notification.ttl = ttl;
 
         // Process title (which may include {{variables}})
         outbound_notification.title = process_template(
@@ -237,19 +240,18 @@ impl Notification {
             self.long_html_template.clone().unwrap(),
             &mut self.values);
         
-        eprintln!("outbound_notification: ({:?})", outbound_notification);
         let contents = json!(outbound_notification).to_string();
-
         let message = Message{
-            sha256: generate_sha256(&contents, None),
+            sha256: generate_sha256(&contents, shared_secret),
             contents: contents,
             priority: priority,
-            ttl: ttl,
+            ttl: outbound_notification.ttl,
         };
 
-        eprintln!("message: ({:?})", message);
-
-        true
+        let client = reqwest::Client::new();
+        client.post(server)
+            .json(&message)
+            .send()
     }
 }
 
@@ -271,8 +273,8 @@ pub struct OutboundNotification {
 
 #[derive(Debug, Default, Serialize)]
 pub struct Message {
-    contents: String,
     sha256: String,
+    contents: String,
     priority: u8,
     ttl: u32,
 }
