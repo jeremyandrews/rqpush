@@ -1,12 +1,14 @@
-#[macro_use] extern crate serde_json;
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate serde_json;
+#[macro_use]
+extern crate serde_derive;
 
 use std::result::Result;
 
-use serde_json::Value;
 use handlebars::Handlebars;
-use sha2::{Sha256, Digest};
-use reqwest::{Response, Error};
+use reqwest::{Error, Response};
+use serde_json::Value;
+use sha2::{Digest, Sha256};
 
 mod template;
 
@@ -30,7 +32,7 @@ pub struct Notification {
 }
 
 impl Notification {
-    // Create a notification with the minumum required number of fields: 
+    // Create a notification with the minumum required number of fields:
     //  - `app` is the app name
     //  - `title` is short text for the notification (ie, an email subject)
     //  - `short_text` is longer text for the notification (ie, an email body)
@@ -42,7 +44,7 @@ impl Notification {
                 json!(null)
             }
         };
-        Notification{
+        Notification {
             app: app.to_string(),
             url: None,
             tagline: None,
@@ -142,7 +144,13 @@ impl Notification {
         self
     }
 
-    pub fn send(&mut self, server: &str, priority: u8, ttl: u32, shared_secret: Option<&str>) -> Result<Response, Error> {
+    pub fn send(
+        &mut self,
+        server: &str,
+        priority: u8,
+        ttl: u32,
+        shared_secret: Option<&str>,
+    ) -> Result<Response, Error> {
         // Provide field mappings, ie {{app}} and {{category}}
         if !&self.values["app"].is_null() {
             self.values["app"] = json!(&self.app);
@@ -165,7 +173,8 @@ impl Notification {
         outbound_notification.title = process_template(
             self.title.clone(),
             template::DEFAULT_TEXT_TEMPLATE.to_string(),
-            &mut self.values);
+            &mut self.values,
+        );
         if !&self.values["title"].is_null() {
             self.values["title"] = json!(&outbound_notification.title);
         }
@@ -199,7 +208,8 @@ impl Notification {
         outbound_notification.short_text = process_template(
             self.short_text.clone(),
             self.short_text_template.clone().unwrap(),
-            &mut self.values);
+            &mut self.values,
+        );
 
         // If custom html isn't provided, use the text version, then process
         outbound_notification.short_html = match &self.short_html {
@@ -210,7 +220,11 @@ impl Notification {
             Some(sht) => Some(sht.to_string()),
             None => Some(template::DEFAULT_HTML_TEMPLATE.to_string()),
         };
-        outbound_notification.short_html = process_template(outbound_notification.short_html.clone(), self.short_html_template.clone().unwrap(), &mut self.values);
+        outbound_notification.short_html = process_template(
+            outbound_notification.short_html.clone(),
+            self.short_html_template.clone().unwrap(),
+            &mut self.values,
+        );
 
         // If custom long text isn't provided, use the short text version
         self.long_text = match &self.long_text {
@@ -224,7 +238,8 @@ impl Notification {
         outbound_notification.long_text = process_template(
             outbound_notification.long_text.clone(),
             self.long_text_template.clone().unwrap(),
-            &mut self.values);
+            &mut self.values,
+        );
 
         // If custom html isn't provided, use the text version
         outbound_notification.long_html = match &self.long_html {
@@ -238,10 +253,11 @@ impl Notification {
         outbound_notification.long_html = process_template(
             outbound_notification.long_html.clone(),
             self.long_html_template.clone().unwrap(),
-            &mut self.values);
-        
+            &mut self.values,
+        );
+
         let contents = json!(outbound_notification).to_string();
-        let message = Message{
+        let message = Message {
             sha256: generate_sha256(&contents, shared_secret),
             contents: contents,
             priority: priority,
@@ -249,9 +265,7 @@ impl Notification {
         };
 
         let client = reqwest::Client::new();
-        client.post(server)
-            .json(&message)
-            .send()
+        client.post(server).json(&message).send()
     }
 }
 
