@@ -19,6 +19,8 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 mod template;
+#[cfg(test)]
+mod tests;
 
 #[derive(Debug)]
 /// An object used to generate notifications.
@@ -357,13 +359,5 @@ fn process_template(notification: String, template: String, values: &mut Value) 
             eprintln!("error in process_html_template: {}", e);
             "".to_string()
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
     }
 }
