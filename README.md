@@ -1,31 +1,72 @@
 # RQPush
 
-A library to assist with pushing notifications to RQueue.
+A library to assist with pushing notifications to [RQueue](https://github.com/jeremyandrews/rqueue).
 
-Provides the following functionality:
+## RQPush Overview
+
+RQPush is only useful as a library for pushing notifications into [RQueue](https://github.com/jeremyandrews/rqueue). For this purpose, it provides the following functionality:
 
 - Builds notifications with support for Handlebar templating
-- Resolves SRV records for sending to priortized notification queues (@TODO)
-- Calculates sha256 hash, optionally salted with a shared secret (@TODO)
+- Calculates a sha256 hash of each notification, optionally salted with a shared secret
+- (@TODO) Routes notifications to the appropriate queue via SRV records
 
-## Notifications
+## Notifications Overview
 
-RQPush requires that all notifications define the following fields:
+Notifications require the following three fields:
 
-```json
-{
-    "app": "AppName",
-    "category": "type of notification",
-    "lang": "Langauge code",
-    "title": "Subject",
-    "short_text": "Short body",
-    "short_html": "<P>Short body</P>",
-    "long_text": "Body",
-    "long_html": "<P>Full body</P>",
-}
+- `app`: _application name_
+- `title`: _the title of the notification, for example used as an email subject_
+- `short_text`: _the body of the notification_
+
+The following fields can optionally be defined as well:
+
+- `url`: _ie, the URL of the project generating the notification, or a URL to view more information_
+- `tagline`: _a description of the project generating the notification_
+- `category`: _allows arbitrary categorization of notifications, primarily used for filtering and routing_
+- `lang`: _two letter language code, defaults to "en"_
+- `short_text_template`: _allows handlebar variable replacement, for example `{{foo}}`_
+- `short_html`: _html version of short_text_
+- `short_html_template`: _allows handlebar variable replacement and wraps in appropriate HTML tags_
+- `long_text`: _optional extended version of `short_text`_
+- `long_html_template`: _allows handlebar variable replacement and wraps in appropriate HTML tags_
+- `values`: _key-value pairs for handlebars-style templating_
+
+## Working With Notifications
+
+Notifications are created as follows:
+
+```Rust
+use rqpush::Notification;
+
+let mut notification: Notification = Notification::init("app name", "title", "short text");
 ```
 
-For example:
+This is enough to generate a basic notification, however additional customization is possible. For example, to set a project URL on a notification that was created per the earlier example:
+
+```Rust
+notification.set_title("https://github.com/jeremyandrews/rqpush");
+```
+
+And finally, a notification can be sent as follows:
+
+```Rust
+notification.send("127.0.0.1:8000", 42, 0, None);
+```
+
+In this example, we send the notification to port 8000 on localhost, with a priority of 42. We don't set a TTL so the notification or a shared secret.
+
+### Netgrasp Example
+
+The following example shows a real-world example, sending a notification with [Netgrasp](https://github.com/jeremyandrews/netgrasp).
+
+```Rust
+use rqpush::Notification;
+
+let mut notification: Notification = Notification::init("Netgrasp", "[netgrasp] new device: {{device}}", "A new device joined your network: {{device}}");
+notification.set_category("first_seen_device");
+```
+
+@TODO: Finish:
 
 ```json
 {
