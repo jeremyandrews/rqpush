@@ -307,7 +307,7 @@ impl Notification {
     }
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 /// The final outbound notification object that is derived from
 /// the internal Notification object.
 pub struct OutboundNotification {
@@ -325,7 +325,7 @@ pub struct OutboundNotification {
     priority: u8,
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 /// The final outbound message that is sent, where "contents" is the OutboundNotification
 /// derived from the internal Notification.
 pub struct Message {
