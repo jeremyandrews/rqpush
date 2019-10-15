@@ -31,6 +31,7 @@ pub struct Notification {
     category: Option<String>,
     lang: String,
     title: String,
+    title_template: Option<String>,
     short_text: String,
     short_text_template: Option<String>,
     short_html: Option<String>,
@@ -62,6 +63,7 @@ impl Notification {
             category: None,
             lang: default_values["lang"].to_string(),
             title: title.to_string(),
+            title_template: None,
             short_text: short_text.to_string(),
             short_text_template: None,
             short_html: None,
@@ -113,6 +115,13 @@ impl Notification {
     pub fn set_title(&mut self, title: &str) -> &Notification {
         self.title = title.to_string();
         self.values["title"] = json!(&self.title);
+        self
+    }
+
+    /// Update the notification object, setting the title_template (otherwise will
+    /// default to template::DEFAULT_TITLE_TEMPLATE).
+    pub fn set_title_template(&mut self, template: String) -> &Notification {
+        self.short_text_template = Some(template.to_string());
         self
     }
 
@@ -208,9 +217,13 @@ impl Notification {
         outbound_notification.ttl = ttl;
 
         // Process title (which may include {{variables}})
+        self.title_template = match &self.title_template {
+            Some(tt) => Some(tt.to_string()),
+            None => Some(template::DEFAULT_TITLE_TEMPLATE.to_string()),
+        };
         outbound_notification.title = process_template(
             self.title.clone(),
-            template::DEFAULT_TEXT_TEMPLATE.to_string(),
+            self.title_template.clone().unwrap(),
             &mut self.values,
         );
         if !&self.values["title"].is_null() {

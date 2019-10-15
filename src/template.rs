@@ -1,3 +1,5 @@
+pub const DEFAULT_TITLE_TEMPLATE: &str = "[{{app}} {{notification}}";
+
 pub const DEFAULT_TEXT_TEMPLATE: &str = "{{notification}}
 
 --
