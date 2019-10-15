@@ -296,10 +296,10 @@ impl Notification {
 
         let contents = json!(outbound_notification).to_string();
         let message = Message {
-            sha256: generate_sha256(&contents, shared_secret),
+            sha256: Some(generate_sha256(&contents, shared_secret)),
             contents: contents,
-            priority: priority,
-            ttl: outbound_notification.ttl,
+            priority: Some(priority),
+            ttl: Some(outbound_notification.ttl),
         };
 
         let client = reqwest::Client::new();
@@ -343,13 +343,13 @@ pub struct OutboundNotification {
 /// derived from the internal Notification.
 pub struct Message {
     /// SHA256 hash of the "contents" String (optionally salted).
-    pub sha256: String,
+    pub sha256: Option<String>,
     /// Contains OutboundNotification struct.
     pub contents: String,
     /// Value from 0-255, higher number is higher priority.
-    pub priority: u8,
+    pub priority: Option<u8>,
     /// How long the notification is valid, in seconds.
-    pub ttl: u32,
+    pub ttl: Option<u32>,
 }
 
 /// Generate a sha256 of a string, including an optional shared_secret as salt.
