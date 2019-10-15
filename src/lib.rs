@@ -309,30 +309,47 @@ impl Notification {
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 /// The final outbound notification object that is derived from
-/// the internal Notification object.
+/// the internal Notification object. This is delivered inside
+/// Message.contents.
 pub struct OutboundNotification {
-    app: String,
-    url: String,
-    tagline: String,
-    category: String,
-    lang: String,
-    title: String,
-    short_text: String,
-    short_html: String,
-    long_text: String,
-    long_html: String,
-    ttl: u32,
-    priority: u8,
+    /// The name of the application generating the notification.
+    pub app: String,
+    /// Optional URL of the application project.
+    pub url: String,
+    /// Optional tagline describing the application.
+    pub tagline: String,
+    /// Optional category used to route or filter notifications.
+    pub category: String,
+    /// Two-letter language code of notification, defaults to "en".
+    pub lang: String,
+    /// Required title of notification, for example used as an email subject.
+    pub title: String,
+    /// Required text body of notification.
+    pub short_text: String,
+    /// Optional HTML-version of body of notification.
+    pub short_html: String,
+    /// Optional extended text body of notification.
+    pub long_text: String,
+    /// Optional HTML-version of extended body of notification.
+    pub long_html: String,
+    /// Optional lifetime in seconds of notficiation.
+    pub ttl: u32,
+    /// Optional priority of notification, from 0-255, higher value is delivered faster.
+    pub priority: u8,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 /// The final outbound message that is sent, where "contents" is the OutboundNotification
 /// derived from the internal Notification.
 pub struct Message {
-    sha256: String,
-    contents: String,
-    priority: u8,
-    ttl: u32,
+    /// SHA256 hash of the "contents" String (optionally salted).
+    pub sha256: String,
+    /// Contains OutboundNotification struct.
+    pub contents: String,
+    /// Value from 0-255, higher number is higher priority.
+    pub priority: u8,
+    /// How long the notification is valid, in seconds.
+    pub ttl: u32,
 }
 
 /// Generate a sha256 of a string, including an optional shared_secret as salt.
