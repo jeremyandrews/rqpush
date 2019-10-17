@@ -121,7 +121,7 @@ impl Notification {
     /// Update the notification object, setting the title_template (otherwise will
     /// default to template::DEFAULT_TITLE_TEMPLATE).
     pub fn set_title_template(&mut self, template: String) -> &Notification {
-        self.short_text_template = Some(template.to_string());
+        self.title_template = Some(template.to_string());
         self
     }
 
