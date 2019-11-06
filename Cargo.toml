@@ -1,6 +1,6 @@
 [package]
 name = "rqpush"
-version = "0.4.5"
+version = "0.4.6"
 authors = ["Jeremy Andrews <jeremy@tag1consulting.com>"]
 edition = "2018"
 description = "A library to assist with pushing notifications to RQueue."
@@ -10,8 +10,6 @@ repository = "https://github.com/jeremyandrews/rqpush"
 readme = "README.md"
 keywords = ["network", "notification"]
 license = "BSD-2-Clause"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 reqwest = "^0.9"

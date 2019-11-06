@@ -188,6 +188,14 @@ impl Notification {
         self
     }
 
+    /// Update the notification object, adding a handlebars key->value pair,
+    /// where the "value" is a serde_json encoded Value. This allows passing in
+    /// structured data, necessary for lists.
+    pub fn add_serde_json_value(&mut self, key: String, value: Value) -> &Notification {
+        self.values[key] = value;
+        self
+    }
+
     /// Compiles and sends the notification. Any missing fields are automatically
     /// filled out, a sha256 is calculated (salted with an optional shared secret),
     /// then the notification is sent using Reqwest.
