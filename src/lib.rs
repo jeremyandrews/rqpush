@@ -14,6 +14,7 @@ extern crate serde_derive;
 use std::result::Result;
 
 use handlebars::Handlebars;
+use log::{info, trace, error};
 use reqwest::{Error, Response};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -49,10 +50,11 @@ impl Notification {
     ///  - `title` is short text for the notification (ie, an email subject)
     ///  - `short_text` is longer text for the notification (ie, an email body)
     pub fn init(app: &str, title: &str, short_text: &str) -> Notification {
+        trace!("rqpush init: app({}) title({}) short_text({})", &app, &title, &short_text);
         let default_values = match serde_json::from_str(template::DEFAULT_MAPPING) {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("error in init(): {}", e);
+                error!("error in init(): {}", e);
                 json!(null)
             }
         };
@@ -78,6 +80,7 @@ impl Notification {
 
     /// Update the notification object, setting the notification app name.
     pub fn set_app(&mut self, app: &str) -> &Notification {
+        trace!("rqpush set_app: app({})", &app);
         self.app = app.to_string();
         self.values["app"] = json!(&self.app);
         self
@@ -85,6 +88,7 @@ impl Notification {
 
     /// Update the notification object, setting the notification url.
     pub fn set_url(&mut self, url: &str) -> &Notification {
+        trace!("rqpush set_url: url({})", &url);
         self.url = Some(url.to_string());
         self.values["url"] = json!(&self.url);
         self
@@ -92,6 +96,7 @@ impl Notification {
 
     /// Update the notification object, setting the notification tagline.
     pub fn set_tagline(&mut self, tagline: &str) -> &Notification {
+        trace!("rqpush set_tagline: tagline({})", &tagline);
         self.tagline = Some(tagline.to_string());
         self.values["tagline"] = json!(&self.tagline);
         self
@@ -99,6 +104,7 @@ impl Notification {
 
     /// Update the notification object, setting the notification category.
     pub fn set_category(&mut self, category: &str) -> &Notification {
+        trace!("rqpush set_category: category({})", &category);
         self.category = Some(category.to_string());
         self.values["category"] = json!(&self.category);
         self
@@ -106,6 +112,7 @@ impl Notification {
 
     /// Update the notification object, setting the notification language.
     pub fn set_lang(&mut self, lang: &str) -> &Notification {
+        trace!("rqpush set_lang: lang({})", &lang);
         self.lang = lang.to_string();
         self.values["lang"] = json!(&self.lang);
         self
@@ -113,6 +120,7 @@ impl Notification {
 
     /// Update the notification object, setting the notification title.
     pub fn set_title(&mut self, title: &str) -> &Notification {
+        trace!("rqpush set_title: title({})", &title);
         self.title = title.to_string();
         self.values["title"] = json!(&self.title);
         self
@@ -121,12 +129,14 @@ impl Notification {
     /// Update the notification object, setting the title_template (otherwise will
     /// default to template::DEFAULT_TITLE_TEMPLATE).
     pub fn set_title_template(&mut self, template: String) -> &Notification {
+        trace!("rqpush set_title_template: title_template({})", &template);
         self.title_template = Some(template.to_string());
         self
     }
 
     /// Update the notification object, setting the short_text.
     pub fn set_short_text(&mut self, short_text: &str) -> &Notification {
+        trace!("rqpush set_short_text: short_text({})", &short_text);
         self.short_text = short_text.to_string();
         self
     }
@@ -134,6 +144,7 @@ impl Notification {
     /// Update the notification object, setting the short_text_template (otherwise will
     /// default to template::DEFAULT_TEXT_TEMPLATE).
     pub fn set_short_text_template(&mut self, template: String) -> &Notification {
+        trace!("rqpush set_text_template: text_template({})", &template);
         self.short_text_template = Some(template.to_string());
         self
     }
@@ -142,12 +153,14 @@ impl Notification {
     /// email notifications -- if not set, will be the same as short_text.
     pub fn set_short_html(&mut self, short_html: &str) -> &Notification {
         self.short_html = Some(short_html.to_string());
+        trace!("rqpush set_short_html: short_html({})", &short_html);
         self
     }
 
     /// Update the notification object, setting the long_text -- if not set, will be the
     /// same as short_text.
     pub fn set_long_text(&mut self, long_text: &str) -> &Notification {
+        trace!("rqpush set_long_text: long_text({})", &long_text);
         self.long_text = Some(long_text.to_string());
         self
     }
@@ -155,6 +168,7 @@ impl Notification {
     /// Update the notification object, setting the long_text_template (otherwise will
     /// default to template::DEFAULT_TEXT_TEMPLATE).
     pub fn set_long_text_template(&mut self, template: String) -> &Notification {
+        trace!("rqpush set_long_text_template: long_text_template({})", &template);
         self.long_text_template = Some(template.to_string());
         self
     }
@@ -162,6 +176,7 @@ impl Notification {
     /// Update the notification object, setting the short_html. This is used when sending
     /// email notifications -- if not set, will be the same as short_html.
     pub fn set_long_html(&mut self, long_html: &str) -> &Notification {
+        trace!("rqpush set_long_html: long_html({})", &long_html);
         self.long_html = Some(long_html.to_string());
         self
     }
@@ -169,6 +184,7 @@ impl Notification {
     /// Update the notification object, setting the short_html_template (otherwise will
     /// default to template::DEFAULT_HTML_TEMPLATE).
     pub fn set_short_html_template(&mut self, template: String) -> &Notification {
+        trace!("rqpush set_short_html_template: short_html_template({})", &template);
         self.short_html_template = Some(template.to_string());
         self
     }
@@ -176,6 +192,7 @@ impl Notification {
     /// Update the notification object, setting the long_html_template (otherwise will
     /// default to template::DEFAULT_HTML_TEMPLATE).
     pub fn set_long_html_template(&mut self, template: String) -> &Notification {
+        trace!("rqpush set_long_html_template: long_html_template({})", &template);
         self.long_html_template = Some(template.to_string());
         self
     }
@@ -184,6 +201,7 @@ impl Notification {
     /// for example: {{key}} -> "value" will cause anywhere {{key}} is written
     /// to be replaced with "value".
     pub fn add_value(&mut self, key: String, value: String) -> &Notification {
+        trace!("rqpush add_value: key({}) value({})", &key, &value);
         self.values[key] = json!(value);
         self
     }
@@ -192,6 +210,7 @@ impl Notification {
     /// where the "value" is a serde_json encoded Value. This allows passing in
     /// structured data, necessary for lists.
     pub fn add_serde_json_value(&mut self, key: String, value: Value) -> &Notification {
+        trace!("rqpush add_serde_json_value: key({}) value({})", &key, &value);
         self.values[key] = value;
         self
     }
@@ -206,6 +225,7 @@ impl Notification {
         ttl: u32,
         shared_secret: Option<&str>,
     ) -> Result<Response, Error> {
+        trace!("rqpush send: server({}) priority({}) ttl({}) shared_secret({:?})", &server, priority, ttl, &shared_secret);
         // Provide field mappings, ie {{app}} and {{category}}
         if !&self.values["app"].is_null() {
             self.values["app"] = json!(&self.app);
@@ -316,12 +336,16 @@ impl Notification {
         );
 
         let contents = json!(outbound_notification).to_string();
+        let sha256 = Some(generate_sha256(&contents, shared_secret));
+        info!("rqpush sending message with priority of {}, sha256 of {:?} and ttl of {} to {}...", priority, &sha256, ttl, &server);
+
         let message = Message {
-            sha256: Some(generate_sha256(&contents, shared_secret)),
+            sha256: sha256,
             contents: contents,
             priority: Some(priority),
             ttl: Some(outbound_notification.ttl),
         };
+        trace!("rqpush send: message({:?})", &message);
 
         let client = reqwest::Client::new();
         client.post(server).json(&message).send()
@@ -375,6 +399,7 @@ pub struct Message {
 
 /// Generate a sha256 of a string, including an optional shared_secret as salt.
 pub fn generate_sha256(text: &str, shared_secret: Option<&str>) -> String {
+    trace!("rqpush generate_sha256: text({}) shared_secret({:?})", &text, &shared_secret);
     let mut hasher = Sha256::new();
     hasher.input(text.as_bytes());
     let salt = match shared_secret {
@@ -384,17 +409,20 @@ pub fn generate_sha256(text: &str, shared_secret: Option<&str>) -> String {
     if salt != "" {
         hasher.input(salt.as_bytes());
     }
-    format!("{:x}", hasher.result())
+    let sha = format!("{:x}", hasher.result());
+    trace!("rqpush generate_sha256: sha256({})", &sha);
+    sha
 }
 
 /// Invokes handlebars to convert {{tokens}} to their values.
 fn process_template(notification: String, template: String, values: &mut Value) -> String {
+    trace!("rqpush process_template: notification({}) template({}) values({:?})", &notification, &template, &values);
     values["notification"] = json!(notification);
     let handlebars = Handlebars::new();
     match handlebars.render_template(&template, &values) {
         Ok(h) => h,
         Err(e) => {
-            eprintln!("error in process_html_template: {}", e);
+            error!("error in process_html_template: {}", e);
             "".to_string()
         }
     }
