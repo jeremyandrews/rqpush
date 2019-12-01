@@ -14,7 +14,7 @@ extern crate serde_derive;
 use std::result::Result;
 
 use handlebars::Handlebars;
-use log::{info, trace, error};
+use log::{debug, error, trace};
 use reqwest::{Error, Response};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
@@ -26,12 +26,18 @@ mod tests;
 #[derive(Debug)]
 /// An object used to generate notifications.
 pub struct Notification {
-    app: String,
-    url: Option<String>,
-    tagline: Option<String>,
-    category: Option<String>,
-    lang: String,
-    title: String,
+    /// Name of application generating notification.
+    pub app: String,
+    /// Optional URL offering more information about application and/or notification.
+    pub url: Option<String>,
+    /// Optional tagline describing application.
+    pub tagline: Option<String>,
+    /// Optional categorization for notification.
+    pub category: Option<String>,
+    /// Language the notification is in.
+    pub lang: String,
+    /// Title of the notification.
+    pub title: String,
     title_template: Option<String>,
     short_text: String,
     short_text_template: Option<String>,
@@ -337,7 +343,7 @@ impl Notification {
 
         let contents = json!(outbound_notification).to_string();
         let sha256 = Some(generate_sha256(&contents, shared_secret));
-        info!("rqpush sending message with priority of {}, sha256 of {:?} and ttl of {} to {}...", priority, &sha256, ttl, &server);
+        debug!("rqpush sending message '{}' with priority of {}, sha256 of {:?} and ttl of {} to {}...", &outbound_notification.title, priority, &sha256, ttl, &server);
 
         let message = Message {
             sha256: sha256,
