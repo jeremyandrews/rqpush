@@ -263,6 +263,8 @@ impl Notification {
         if !&self.values["title"].is_null() {
             self.values["title"] = json!(&outbound_notification.title);
         }
+        // Update self.title as well to make information available to library users
+        self.title = outbound_notification.title.clone();
 
         // If url isn't set manually, set to empty string
         outbound_notification.url = match &self.url {
